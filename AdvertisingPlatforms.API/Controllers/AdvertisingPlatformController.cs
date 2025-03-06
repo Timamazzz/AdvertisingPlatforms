@@ -60,14 +60,29 @@ public class AdvertisingPlatformController(IAdvertisingPlatformService service, 
     /// </returns>
     /// <response code="200">Список рекламных площадок.</response>
     /// <response code="400">Некорректный запрос (например, пустая локация).</response>
+    /// <response code="404">Локация не найдена.</response>
     /// <response code="500">Ошибка сервера.</response>
     [HttpGet("{location}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetPlatforms([FromRoute] string location)
     {
-        var platforms = await service.GetPlatformsForLocationAsync(location);
-        return Ok(platforms);
+        try
+        {
+            var platforms = await service.GetPlatformsForLocationAsync(location);
+
+            if (platforms.Count == 0)
+            {
+                return NotFound("Для данной локации не найдено рекламных площадок.");
+            }
+
+            return Ok(platforms);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, "Произошла ошибка при обработке запроса.");
+        }
     }
 }

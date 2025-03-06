@@ -1,6 +1,5 @@
 ﻿using FluentValidation;
 using AdvertisingPlatforms.API.Contracts.Requests;
-using System;
 
 namespace AdvertisingPlatforms.API.Validation;
 
@@ -17,8 +16,9 @@ public class UploadFileRequestValidator : AbstractValidator<UploadFileRequest>
     public UploadFileRequestValidator()
     {
         RuleFor(x => x.File)
-            .Must(file => file.Length > 0).WithMessage("Файл пуст.")
+            .Must(file => file.Length > 0)
+            .WithMessage("Файл пуст.")
             .Must(file => AllowedMimeTypes.Contains(file.ContentType))
-            .WithMessage("Недопустимый MIME-тип. Ожидается text/plain.");
+            .WithMessage($"Недопустимый MIME-тип. Ожидается один из: {string.Join(", ", AllowedMimeTypes)}.");
     }
 }

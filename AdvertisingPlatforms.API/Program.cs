@@ -15,6 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Контроллеры
 builder.Services.AddControllers();
 
+// FluentValidation
 builder.Services.AddValidatorsFromAssemblyContaining<UploadFileRequestValidator>();
 builder.Services.AddFluentValidationAutoValidation();
 
@@ -29,7 +30,6 @@ builder.Services.AddSwaggerGen(options =>
         Description = "API для загрузки и поиска рекламных площадок по регионам."
     });
 
-    // Включаем XML-документацию
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     options.IncludeXmlComments(xmlPath);

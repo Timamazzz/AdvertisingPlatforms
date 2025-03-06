@@ -1,69 +1,42 @@
 ﻿using AdvertisingPlatforms.Domain.Interfaces;
 using System.Collections.Concurrent;
-using System.Web;
 
 namespace AdvertisingPlatforms.Infrastructure.Repositories;
 
+/// <summary>
+/// Реализация репозитория для хранения рекламных площадок в оперативной памяти.
+/// </summary>
 public class AdvertisingPlatformStorage : IAdvertisingPlatformRepository
 {
+    /// <summary>
+    /// Потокобезопасное хранилище рекламных площадок, где ключ — локация, а значение — набор площадок.
+    /// </summary>
     private readonly ConcurrentDictionary<string, HashSet<string>> _locationToPlatforms = new();
 
-    public async Task LoadFromFileAsync(IAsyncEnumerable<string> lines)
+    /// <summary>
+    /// Сохраняет переданные данные в память, заменяя предыдущие записи.
+    /// </summary>
+    /// <param name="data">Словарь, где ключ — регион, значение — набор рекламных площадок.</param>
+    public Task SaveDataAsync(Dictionary<string, HashSet<string>> data)
     {
         _locationToPlatforms.Clear();
 
-        var rawData = new ConcurrentDictionary<string, HashSet<string>>();
-
-        await foreach (var line in lines)
+        foreach (var entry in data)
         {
-
-            var parts = line.Split(':', 2);
-            if (parts.Length != 2)
-            {
-                continue;
-            }
-
-            var platform = parts[0].Trim();
-            var locations = parts[1].Split(',').Select(loc => loc.Trim());
-
-            foreach (var location in locations)
-            {
-                rawData.AddOrUpdate(
-                    location,
-                    _ => new HashSet<string> { platform },
-                    (_, set) =>
-                    {
-                        set.Add(platform);
-                        return set;
-                    });
-            }
+            _locationToPlatforms[entry.Key] = entry.Value;
         }
 
-        foreach (var location in rawData.Keys)
-        {
-            var allPlatforms = new HashSet<string>();
-
-            string currentLocation = location;
-            while (!string.IsNullOrEmpty(currentLocation))
-            {
-                if (rawData.TryGetValue(currentLocation, out var platforms))
-                {
-                    allPlatforms.UnionWith(platforms);
-                }
-
-                var lastSlashIndex = currentLocation.LastIndexOf('/');
-                currentLocation = lastSlashIndex > 0 ? currentLocation[..lastSlashIndex] : string.Empty;
-            }
-
-            _locationToPlatforms[location] = allPlatforms;
-        }
+        return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Возвращает список рекламных площадок для указанной локации.
+    /// </summary>
+    /// <param name="location">Локация в формате "/ru/svrd/ekb".</param>
+    /// <returns>Список рекламных площадок или пустой список, если данных нет.</returns>
     public Task<List<string>> GetPlatformsForLocationAsync(string location)
     {
-        string decodedLocation = HttpUtility.UrlDecode(location);
-
-        var result = _locationToPlatforms.TryGetValue(decodedLocation, out var platforms)
+        var result = _locationToPlatforms.TryGetValue(location, out var platforms)
             ? platforms.ToList()
             : new List<string>();
 
