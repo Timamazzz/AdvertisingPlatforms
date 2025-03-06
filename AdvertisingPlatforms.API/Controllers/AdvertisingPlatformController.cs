@@ -54,7 +54,7 @@ public class AdvertisingPlatformController(IAdvertisingPlatformService service, 
     /// <summary>
     /// Получает рекламные площадки для указанной локации.
     /// </summary>
-    /// <param name="location">Локация в формате "/ru/svrd/ekb".</param>
+    /// <param name="location">Локация в формате "/ru".</param>
     /// <returns>
     /// Возвращает список рекламных площадок для указанного региона.
     /// </returns>

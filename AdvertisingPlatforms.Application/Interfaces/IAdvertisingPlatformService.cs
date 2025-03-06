@@ -14,7 +14,7 @@ public interface IAdvertisingPlatformService
     /// <summary>
     /// Получает список рекламных площадок для указанной локации.
     /// </summary>
-    /// <param name="location">Локация в формате "/ru/svrd/ekb".</param>
+    /// <param name="location">Локация в формате "/ru".</param>
     /// <returns>Список рекламных площадок, если они найдены.</returns>
     Task<List<string>> GetPlatformsForLocationAsync(string location);
     

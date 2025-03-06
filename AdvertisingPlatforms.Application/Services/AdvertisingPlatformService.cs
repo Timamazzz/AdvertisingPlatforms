@@ -68,7 +68,7 @@ public class AdvertisingPlatformService(IAdvertisingPlatformRepository repositor
     /// <summary>
     /// Возвращает список рекламных площадок для указанной локации.
     /// </summary>
-    /// <param name="location">Локация в формате "/ru/svrd/ekb".</param>
+    /// <param name="location">Локация в формате "/ru".</param>
     /// <returns>Список рекламных площадок.</returns>
     public Task<List<string>> GetPlatformsForLocationAsync(string location)
     {
