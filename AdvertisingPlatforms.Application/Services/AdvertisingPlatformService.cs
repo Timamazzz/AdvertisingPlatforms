@@ -75,4 +75,9 @@ public class AdvertisingPlatformService(IAdvertisingPlatformRepository repositor
         string decodedLocation = HttpUtility.UrlDecode(location).Trim();
         return repository.GetPlatformsForLocationAsync(decodedLocation);
     }
+    
+    /// <summary>
+    /// Возвращает, загружены ли данные о рекламных площадках
+    /// </summary>
+    public bool HasData() => repository.HasData();
 }

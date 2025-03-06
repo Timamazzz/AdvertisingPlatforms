@@ -42,4 +42,9 @@ public class AdvertisingPlatformStorage : IAdvertisingPlatformRepository
 
         return Task.FromResult(result);
     }
+    
+    /// <summary>
+    /// Возвращает, загружены ли данные о рекламных площадках
+    /// </summary>
+    public bool HasData() => !_locationToPlatforms.IsEmpty;
 }

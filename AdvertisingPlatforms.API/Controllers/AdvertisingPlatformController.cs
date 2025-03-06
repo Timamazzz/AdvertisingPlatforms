@@ -62,15 +62,23 @@ public class AdvertisingPlatformController(IAdvertisingPlatformService service, 
     /// <response code="400">Некорректный запрос (например, пустая локация).</response>
     /// <response code="404">Локация не найдена.</response>
     /// <response code="500">Ошибка сервера.</response>
+    /// <response code="503">Данные о рекламных площадках не загружены.</response>
     [HttpGet("{location}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> GetPlatforms([FromRoute] string location)
     {
         try
         {
+            if (!service.HasData())
+            {
+                return StatusCode(StatusCodes.Status503ServiceUnavailable,
+                    "Данные о рекламных площадках не загружены.");
+            }
+
             var platforms = await service.GetPlatformsForLocationAsync(location);
 
             if (platforms.Count == 0)
@@ -80,7 +88,7 @@ public class AdvertisingPlatformController(IAdvertisingPlatformService service, 
 
             return Ok(platforms);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, "Произошла ошибка при обработке запроса.");
         }
