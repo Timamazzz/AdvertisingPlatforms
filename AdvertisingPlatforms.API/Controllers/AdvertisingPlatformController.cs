@@ -30,13 +30,26 @@ public class AdvertisingPlatformController(IAdvertisingPlatformService service, 
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [HttpPost]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UploadFile([FromForm] UploadFileRequest request)
     {
-        await using var stream = request.File.OpenReadStream();
-        var lines = fileHelper.ReadLinesAsync(stream);
-        await service.LoadFromFileAsync(lines);
-        return Ok("Файл успешно загружен.");
+        try
+        {
+            await using var stream = request.File.OpenReadStream();
+            var lines = fileHelper.ReadLinesAsync(stream);
+            await service.LoadFromFileAsync(lines);
+
+            return Ok("Файл успешно загружен.");
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, "Произошла ошибка при обработке файла.");
+        }
     }
+
 
     /// <summary>
     /// Получает рекламные площадки для указанной локации.

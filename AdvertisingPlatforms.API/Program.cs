@@ -7,12 +7,16 @@ using AdvertisingPlatforms.Application.Services;
 using AdvertisingPlatforms.Domain.Interfaces;
 using AdvertisingPlatforms.Infrastructure.Repositories;
 using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Контроллеры
 builder.Services.AddControllers();
+
+builder.Services.AddValidatorsFromAssemblyContaining<UploadFileRequestValidator>();
+builder.Services.AddFluentValidationAutoValidation();
 
 // Включаем Swagger (для тестирования API)
 builder.Services.AddEndpointsApiExplorer();

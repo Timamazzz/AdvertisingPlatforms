@@ -1,16 +1,24 @@
 ﻿using FluentValidation;
 using AdvertisingPlatforms.API.Contracts.Requests;
-using System.Text.RegularExpressions;
+using System;
 
 namespace AdvertisingPlatforms.API.Validation;
 
+/// <summary>
+/// Настраивает правила валидации для загружаемого файла.
+/// </summary>
 public class UploadFileRequestValidator : AbstractValidator<UploadFileRequest>
 {
+    /// <summary>
+    /// Допустимые MIME-типы для текстовых файлов.
+    /// </summary>
+    private static readonly HashSet<string> AllowedMimeTypes = new() { "text/plain" };
+
     public UploadFileRequestValidator()
     {
-        Console.WriteLine("Hello valid");
         RuleFor(x => x.File)
-            .NotNull().WithMessage("Файл обязателен.")
-            .Must(file => file is { Length: > 0 }).WithMessage("Файл пуст.");
+            .Must(file => file.Length > 0).WithMessage("Файл пуст.")
+            .Must(file => AllowedMimeTypes.Contains(file.ContentType))
+            .WithMessage("Недопустимый MIME-тип. Ожидается text/plain.");
     }
 }
