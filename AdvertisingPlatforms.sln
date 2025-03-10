@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-#
+# 
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdvertisingPlatforms.API", "AdvertisingPlatforms.API\AdvertisingPlatforms.API.csproj", "{597C715E-0FC1-4E4E-9F11-84C2A9472676}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{54425DD7-1F5F-45A8-B43E-21272ED41FFC}"
@@ -22,6 +22,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{5A
 		partial_success.txt = partial_success.txt
 		failure.txt = failure.txt
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdvertisingPlatforms.Tests", "AdvertisingPlatforms.Tests\AdvertisingPlatforms.Tests.csproj", "{574C85C0-6A84-41BA-A18F-424369F28F91}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{780B4BA5-68C4-4838-8F01-9E8A55B34A1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{780B4BA5-68C4-4838-8F01-9E8A55B34A1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{780B4BA5-68C4-4838-8F01-9E8A55B34A1D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{574C85C0-6A84-41BA-A18F-424369F28F91}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{574C85C0-6A84-41BA-A18F-424369F28F91}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{574C85C0-6A84-41BA-A18F-424369F28F91}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{574C85C0-6A84-41BA-A18F-424369F28F91}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 	EndGlobalSection
