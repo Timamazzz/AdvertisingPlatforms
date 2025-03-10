@@ -17,9 +17,16 @@ public interface IAdvertisingPlatformRepository
     /// <param name="location">Локация в формате "/ru".</param>
     /// <returns>Список названий рекламных площадок или пустой список, если ничего не найдено.</returns>
     Task<List<string>> GetPlatformsForLocationAsync(string location);
-    
+
     /// <summary>
-    /// Возвращает, загружены ли данные о рекламных площадках
+    /// Возвращает, загружены ли данные о рекламных площадках.
     /// </summary>
     bool HasData();
+
+    /// <summary>
+    /// Проверяет, существует ли указанная локация в системе.
+    /// </summary>
+    /// <param name="location">Локация в формате "/ru".</param>
+    /// <returns>True, если локация существует, иначе false.</returns>
+    bool LocationExists(string location);
 }

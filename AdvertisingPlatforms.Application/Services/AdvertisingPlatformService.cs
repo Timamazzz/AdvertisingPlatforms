@@ -17,31 +17,47 @@ public class AdvertisingPlatformService(IAdvertisingPlatformRepository repositor
     public async Task LoadFromFileAsync(IAsyncEnumerable<string> lines)
     {
         var rawData = new Dictionary<string, HashSet<string>>();
+        var failedLines = new List<string>();
+        var validLines = new List<string>();
 
         await foreach (var line in lines)
         {
             var parts = line.Split(':', 2);
-
             if (parts.Length != 2)
             {
+                failedLines.Add(line);
                 continue;
             }
 
             var platform = parts[0].Trim();
             var locations = parts[1].Split(',').Select(loc => loc.Trim()).ToList();
 
+            if (string.IsNullOrEmpty(platform) || locations.Any(string.IsNullOrEmpty))
+            {
+                failedLines.Add(line);
+                continue;
+            }
+
+            validLines.Add(line);
+
             foreach (var location in locations)
             {
-                if (!rawData.ContainsKey(location))
+                if (!rawData.TryGetValue(location, out var platforms))
                 {
-                    rawData[location] = new HashSet<string>();
+                    platforms = new HashSet<string>();
+                    rawData[location] = platforms;
                 }
 
-                rawData[location].Add(platform);
+                platforms.Add(platform);
             }
         }
 
-        var processedData = new Dictionary<string, HashSet<string>>();
+        if (rawData.Count == 0)
+        {
+            throw new InvalidDataException("Файл не содержит корректных данных о рекламных площадках.");
+        }
+
+        var processedData = new Dictionary<string, HashSet<string>>(rawData.Count);
 
         foreach (var location in rawData.Keys)
         {
@@ -63,21 +79,42 @@ public class AdvertisingPlatformService(IAdvertisingPlatformRepository repositor
         }
 
         await repository.SaveDataAsync(processedData);
+
+        if (failedLines.Count > 0)
+        {
+            throw new InvalidDataException(
+                $"Файл загружен частично. Успешно обработано {validLines.Count} строк, ошибки в строках:\n{string.Join("\n", failedLines)}"
+            );
+        }
     }
+
 
     /// <summary>
     /// Возвращает список рекламных площадок для указанной локации.
     /// </summary>
     /// <param name="location">Локация в формате "/ru".</param>
     /// <returns>Список рекламных площадок.</returns>
-    public Task<List<string>> GetPlatformsForLocationAsync(string location)
+    public async Task<List<string>> GetPlatformsForLocationAsync(string location)
     {
         string decodedLocation = HttpUtility.UrlDecode(location).Trim();
-        return repository.GetPlatformsForLocationAsync(decodedLocation);
+
+        if (!repository.HasData())
+        {
+            throw new InvalidOperationException("Данные о рекламных площадках не загружены.");
+        }
+
+        if (!repository.LocationExists(decodedLocation))
+        {
+            throw new KeyNotFoundException("Указанная локация не существует в системе.");
+        }
+
+        var platforms = await repository.GetPlatformsForLocationAsync(decodedLocation);
+
+        if (platforms.Count == 0)
+        {
+            throw new KeyNotFoundException("Для данной локации не найдено рекламных площадок.");
+        }
+
+        return platforms;
     }
-    
-    /// <summary>
-    /// Возвращает, загружены ли данные о рекламных площадках
-    /// </summary>
-    public bool HasData() => repository.HasData();
 }

@@ -18,6 +18,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{5A6A9311-287D-4448-88BC-CA5AB45256E7}"
 	ProjectSection(SolutionItems) = preProject
 		example.txt = example.txt
+		success.txt = success.txt
+		partial_success.txt = partial_success.txt
+		failure.txt = failure.txt
 	EndProjectSection
 EndProject
 Global

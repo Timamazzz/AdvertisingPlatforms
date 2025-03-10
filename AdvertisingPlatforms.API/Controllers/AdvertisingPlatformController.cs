@@ -30,10 +30,6 @@ public class AdvertisingPlatformController(IAdvertisingPlatformService service, 
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    [HttpPost]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UploadFile([FromForm] UploadFileRequest request)
     {
         try
@@ -42,26 +38,32 @@ public class AdvertisingPlatformController(IAdvertisingPlatformService service, 
             var lines = fileHelper.ReadLinesAsync(stream);
             await service.LoadFromFileAsync(lines);
 
-            return Ok("Файл успешно загружен.");
+            return Ok(new { message = "Файл успешно загружен." });
         }
-        catch (Exception ex)
+        catch (InvalidDataException ex)
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, "Произошла ошибка при обработке файла.");
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (Exception)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                new { error = "Произошла ошибка при обработке файла." });
         }
     }
 
 
     /// <summary>
-    /// Получает рекламные площадки для указанной локации.
+    /// Получает рекламные площадки, действующие в указанной локации.
     /// </summary>
     /// <param name="location">Локация в формате "/ru".</param>
     /// <returns>
-    /// Возвращает список рекламных площадок для указанного региона.
+    /// Возвращает список рекламных площадок, если они есть.
     /// </returns>
-    /// <response code="200">Список рекламных площадок.</response>
-    /// <response code="400">Некорректный запрос (например, пустая локация).</response>
-    /// <response code="404">Локация не найдена.</response>
-    /// <response code="500">Ошибка сервера.</response>
+    /// <response code="200">Успешный запрос. Возвращает список рекламных площадок.</response>
+    /// <response code="400">Некорректный запрос (например, передана пустая строка).</response>
+    /// <response code="404">Указанная локация не существует.</response>
+    /// <response code="404">Локация найдена, но для нее нет рекламных площадок.</response>
+    /// <response code="500">Внутренняя ошибка сервера.</response>
     /// <response code="503">Данные о рекламных площадках не загружены.</response>
     [HttpGet("{location}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -73,20 +75,16 @@ public class AdvertisingPlatformController(IAdvertisingPlatformService service, 
     {
         try
         {
-            if (!service.HasData())
-            {
-                return StatusCode(StatusCodes.Status503ServiceUnavailable,
-                    "Данные о рекламных площадках не загружены.");
-            }
-
             var platforms = await service.GetPlatformsForLocationAsync(location);
-
-            if (platforms.Count == 0)
-            {
-                return NotFound("Для данной локации не найдено рекламных площадок.");
-            }
-
             return Ok(platforms);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, ex.Message);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
         }
         catch (Exception)
         {

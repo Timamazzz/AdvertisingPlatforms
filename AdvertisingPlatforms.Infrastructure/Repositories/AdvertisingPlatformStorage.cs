@@ -42,9 +42,16 @@ public class AdvertisingPlatformStorage : IAdvertisingPlatformRepository
 
         return Task.FromResult(result);
     }
-    
+
     /// <summary>
-    /// Возвращает, загружены ли данные о рекламных площадках
+    /// Проверяет, загружены ли данные о рекламных площадках.
     /// </summary>
     public bool HasData() => !_locationToPlatforms.IsEmpty;
+
+    /// <summary>
+    /// Проверяет, существует ли указанная локация в системе.
+    /// </summary>
+    /// <param name="location">Локация в формате "/ru".</param>
+    /// <returns>True, если локация существует, иначе false.</returns>
+    public bool LocationExists(string location) => _locationToPlatforms.ContainsKey(location);
 }
