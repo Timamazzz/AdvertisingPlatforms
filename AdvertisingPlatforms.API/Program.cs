@@ -1,5 +1,6 @@
 using System.Reflection;
 using AdvertisingPlatforms.API.Interfaces;
+using AdvertisingPlatforms.API.Middleware;
 using AdvertisingPlatforms.API.Utils;
 using AdvertisingPlatforms.API.Validation;
 using AdvertisingPlatforms.Application.Interfaces;
@@ -41,6 +42,9 @@ builder.Services.AddSingleton<IAdvertisingPlatformRepository, AdvertisingPlatfor
 builder.Services.AddScoped<IAdvertisingPlatformService, AdvertisingPlatformService>();
 
 var app = builder.Build();
+
+// Подключение middlewares
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // Включаем Swagger UI
 if (app.Environment.IsDevelopment())

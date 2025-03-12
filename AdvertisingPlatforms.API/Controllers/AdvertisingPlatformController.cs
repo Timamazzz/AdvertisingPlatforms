@@ -32,23 +32,11 @@ public class AdvertisingPlatformController(IAdvertisingPlatformService service, 
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UploadFile([FromForm] UploadFileRequest request)
     {
-        try
-        {
-            await using var stream = request.File.OpenReadStream();
-            var lines = fileHelper.ReadLinesAsync(stream);
-            await service.LoadFromFileAsync(lines);
+        await using var stream = request.File.OpenReadStream();
+        var lines = fileHelper.ReadLinesAsync(stream);
+        await service.LoadFromFileAsync(lines);
 
-            return Ok(new { message = "Файл успешно загружен." });
-        }
-        catch (InvalidDataException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (Exception)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError,
-                new { error = "Произошла ошибка при обработке файла." });
-        }
+        return Ok(new { message = "Файл успешно загружен." });
     }
 
 
@@ -73,22 +61,7 @@ public class AdvertisingPlatformController(IAdvertisingPlatformService service, 
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> GetPlatforms([FromRoute] string location)
     {
-        try
-        {
-            var platforms = await service.GetPlatformsForLocationAsync(location);
-            return Ok(platforms);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return StatusCode(StatusCodes.Status503ServiceUnavailable, ex.Message);
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(ex.Message);
-        }
-        catch (Exception)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError, "Произошла ошибка при обработке запроса.");
-        }
+        var platforms = await service.GetPlatformsForLocationAsync(location);
+        return Ok(platforms);
     }
 }
