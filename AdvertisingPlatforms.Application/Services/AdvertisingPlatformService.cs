@@ -16,9 +16,9 @@ public class AdvertisingPlatformService(IAdvertisingPlatformRepository repositor
     /// <param name="lines">Асинхронная последовательность строк из файла.</param>
     public async Task LoadFromFileAsync(IAsyncEnumerable<string> lines)
     {
-        var rawData = new Dictionary<string, HashSet<string>>();
+        var tempData = new Dictionary<string, HashSet<string>>();
         var failedLines = new List<string>();
-        var validLines = new List<string>();
+        var validLines = 0;
 
         await foreach (var line in lines)
         {
@@ -38,35 +38,35 @@ public class AdvertisingPlatformService(IAdvertisingPlatformRepository repositor
                 continue;
             }
 
-            validLines.Add(line);
+            validLines++;
 
             foreach (var location in locations)
             {
-                if (!rawData.TryGetValue(location, out var platforms))
+                if (!tempData.TryGetValue(location, out var platforms))
                 {
                     platforms = new HashSet<string>();
-                    rawData[location] = platforms;
+                    tempData[location] = platforms;
                 }
 
                 platforms.Add(platform);
             }
         }
 
-        if (rawData.Count == 0)
+        if (tempData.Count == 0)
         {
             throw new InvalidDataException("Файл не содержит корректных данных о рекламных площадках.");
         }
 
-        var processedData = new Dictionary<string, HashSet<string>>(rawData.Count);
+        var processedData = new Dictionary<string, HashSet<string>>(tempData.Count);
 
-        foreach (var location in rawData.Keys)
+        foreach (var location in tempData.Keys)
         {
             var allPlatforms = new HashSet<string>();
 
             string currentLocation = location;
             while (!string.IsNullOrEmpty(currentLocation))
             {
-                if (rawData.TryGetValue(currentLocation, out var platforms))
+                if (tempData.TryGetValue(currentLocation, out var platforms))
                 {
                     allPlatforms.UnionWith(platforms);
                 }
@@ -77,13 +77,13 @@ public class AdvertisingPlatformService(IAdvertisingPlatformRepository repositor
 
             processedData[location] = allPlatforms;
         }
-
+        
         await repository.SaveDataAsync(processedData);
 
         if (failedLines.Count > 0)
         {
             throw new InvalidDataException(
-                $"Файл загружен частично. Успешно обработано {validLines.Count} строк, ошибки в строках:\n{string.Join("\n", failedLines)}"
+                $"Файл загружен частично. Успешно обработано {validLines} строк, ошибки в строках:\n{string.Join("\n", failedLines)}"
             );
         }
     }
