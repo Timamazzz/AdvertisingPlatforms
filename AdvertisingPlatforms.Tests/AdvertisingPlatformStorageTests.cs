@@ -1,5 +1,7 @@
 ﻿using AdvertisingPlatforms.Infrastructure.Repositories;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
+using Moq;
 
 namespace AdvertisingPlatforms.Tests;
 
@@ -9,7 +11,14 @@ namespace AdvertisingPlatforms.Tests;
 /// </summary>
 public class AdvertisingPlatformStorageTests
 {
-    private readonly AdvertisingPlatformStorage _repository = new();
+    private readonly AdvertisingPlatformStorage _repository;
+    private readonly Mock<ILogger<AdvertisingPlatformStorage>> _loggerMock;
+
+    public AdvertisingPlatformStorageTests()
+    {
+        _loggerMock = new Mock<ILogger<AdvertisingPlatformStorage>>();
+        _repository = new AdvertisingPlatformStorage(_loggerMock.Object);
+    }
 
     /// <summary>
     /// Проверяет, что данные корректно сохраняются в репозитории.

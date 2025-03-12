@@ -1,6 +1,7 @@
 ﻿using AdvertisingPlatforms.Application.Services;
 using AdvertisingPlatforms.Domain.Interfaces;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace AdvertisingPlatforms.Tests;
@@ -12,12 +13,14 @@ namespace AdvertisingPlatforms.Tests;
 public class AdvertisingPlatformServiceTests
 {
     private readonly Mock<IAdvertisingPlatformRepository> _mockRepository;
+    private readonly Mock<ILogger<AdvertisingPlatformService>> _loggerMock;
     private readonly AdvertisingPlatformService _service;
 
     public AdvertisingPlatformServiceTests()
     {
         _mockRepository = new Mock<IAdvertisingPlatformRepository>();
-        _service = new AdvertisingPlatformService(_mockRepository.Object);
+        _loggerMock = new Mock<ILogger<AdvertisingPlatformService>>();
+        _service = new AdvertisingPlatformService(_mockRepository.Object, _loggerMock.Object);
     }
 
     /// <summary>

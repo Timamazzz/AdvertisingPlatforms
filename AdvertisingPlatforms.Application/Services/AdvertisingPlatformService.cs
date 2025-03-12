@@ -1,6 +1,7 @@
 ﻿using System.Web;
 using AdvertisingPlatforms.Application.Interfaces;
 using AdvertisingPlatforms.Domain.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace AdvertisingPlatforms.Application.Services;
 
@@ -8,14 +9,18 @@ namespace AdvertisingPlatforms.Application.Services;
 /// Сервис для обработки данных рекламных площадок.
 /// </summary>
 /// <param name="repository">Репозиторий для хранения данных.</param>
-public class AdvertisingPlatformService(IAdvertisingPlatformRepository repository) : IAdvertisingPlatformService
+/// <param name="logger">Логгер.</param>
+public class AdvertisingPlatformService(
+    IAdvertisingPlatformRepository repository,
+    ILogger<AdvertisingPlatformService> logger) : IAdvertisingPlatformService
 {
     /// <summary>
     /// Загружает рекламные площадки из файла, обрабатывает данные и сохраняет в хранилище.
     /// </summary>
-    /// <param name="lines">Асинхронная последовательность строк из файла.</param>
     public async Task LoadFromFileAsync(IAsyncEnumerable<string> lines)
     {
+        logger.LogInformation("Начата загрузка данных из файла.");
+
         var tempData = new Dictionary<string, HashSet<string>>();
         var failedLines = new List<string>();
         var validLines = 0;
@@ -77,26 +82,26 @@ public class AdvertisingPlatformService(IAdvertisingPlatformRepository repositor
 
             processedData[location] = allPlatforms;
         }
-        
+
+        logger.LogInformation("Начинается сохранение обработанных данных в репозиторий.");
         await repository.SaveDataAsync(processedData);
 
         if (failedLines.Count > 0)
         {
             throw new InvalidDataException(
-                $"Файл загружен частично. Успешно обработано {validLines} строк, ошибки в строках:\n{string.Join("\n", failedLines)}"
-            );
+                $"Файл загружен частично. Успешно обработано {validLines} строк, ошибки в строках:\n{string.Join("\n", failedLines)}");
         }
-    }
 
+        logger.LogInformation("Данные успешно загружены и сохранены.");
+    }
 
     /// <summary>
     /// Возвращает список рекламных площадок для указанной локации.
     /// </summary>
-    /// <param name="location">Локация в формате "/ru".</param>
-    /// <returns>Список рекламных площадок.</returns>
     public async Task<List<string>> GetPlatformsForLocationAsync(string location)
     {
         string decodedLocation = HttpUtility.UrlDecode(location).Trim();
+        logger.LogInformation("Запрошены рекламные площадки для локации: {Location}", decodedLocation);
 
         if (!repository.HasData())
         {
@@ -115,6 +120,8 @@ public class AdvertisingPlatformService(IAdvertisingPlatformRepository repositor
             throw new KeyNotFoundException("Для данной локации не найдено рекламных площадок.");
         }
 
+        logger.LogInformation("Для локации {Location} найдено {Count} рекламных площадок.", decodedLocation,
+            platforms.Count);
         return platforms;
     }
 }

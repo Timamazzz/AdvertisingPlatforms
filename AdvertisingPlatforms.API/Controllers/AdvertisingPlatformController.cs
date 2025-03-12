@@ -13,7 +13,10 @@ namespace AdvertisingPlatforms.API.Controllers;
 /// <param name="fileHelper">Утилита для обработки файлов.</param>
 [ApiController]
 [Route("api/advertising-platforms")]
-public class AdvertisingPlatformController(IAdvertisingPlatformService service, IFileHelper fileHelper) : ControllerBase
+public class AdvertisingPlatformController(
+    IAdvertisingPlatformService service,
+    IFileHelper fileHelper,
+    ILogger<AdvertisingPlatformController> logger) : ControllerBase
 {
     /// <summary>
     /// Загружает рекламные площадки из текстового файла.
@@ -32,10 +35,15 @@ public class AdvertisingPlatformController(IAdvertisingPlatformService service, 
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UploadFile([FromForm] UploadFileRequest request)
     {
+        logger.LogInformation("Получен файл {FileName} размером {FileSize} байт", request.File.FileName,
+            request.File.Length);
+
+
         await using var stream = request.File.OpenReadStream();
         var lines = fileHelper.ReadLinesAsync(stream);
         await service.LoadFromFileAsync(lines);
 
+        logger.LogInformation("Файл {FileName} успешно обработан", request.File.FileName);
         return Ok(new { message = "Файл успешно загружен." });
     }
 
@@ -61,7 +69,11 @@ public class AdvertisingPlatformController(IAdvertisingPlatformService service, 
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> GetPlatforms([FromRoute] string location)
     {
+        logger.LogInformation("Запрос рекламных площадок для локации: {Location}", location);
+
         var platforms = await service.GetPlatformsForLocationAsync(location);
+
+        logger.LogInformation("Найдено {Count} площадок для локации {Location}", platforms.Count, location);
         return Ok(platforms);
     }
 }

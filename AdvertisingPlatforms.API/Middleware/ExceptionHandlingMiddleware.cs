@@ -1,47 +1,42 @@
-﻿using System.Text.Json;
+﻿using System.Net;
+using System.Text.Json;
 
 namespace AdvertisingPlatforms.API.Middleware;
 
-public class ExceptionHandlingMiddleware
+/// <summary>
+/// Middleware для глобальной обработки исключений и логирования ошибок.
+/// </summary>
+public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
 {
-    private readonly RequestDelegate _next;
-
-    public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
-    {
-        _next = next;
-    }
-
     public async Task Invoke(HttpContext context)
     {
         try
         {
-            await _next(context);
+            await next(context);
         }
         catch (Exception ex)
         {
+            logger.LogError(ex, "Ошибка обработки запроса: {Path}", context.Request.Path);
             await HandleExceptionAsync(context, ex);
         }
     }
 
-    private static Task HandleExceptionAsync(HttpContext context, Exception exception)
+    private static async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
         context.Response.ContentType = "application/json";
+        var response = context.Response;
 
-        var statusCode = exception switch
+        response.StatusCode = exception switch
         {
-            InvalidOperationException => StatusCodes.Status503ServiceUnavailable,
-            KeyNotFoundException => StatusCodes.Status404NotFound,
-            InvalidDataException => StatusCodes.Status400BadRequest,
-            _ => StatusCodes.Status500InternalServerError
+            InvalidDataException => (int)HttpStatusCode.BadRequest,
+            KeyNotFoundException => (int)HttpStatusCode.NotFound,
+            InvalidOperationException => (int)HttpStatusCode.ServiceUnavailable,
+            _ => (int)HttpStatusCode.InternalServerError
         };
 
-        var response = new
-        {
-            error = exception.Message,
-            status = statusCode
-        };
+        var errorResponse = new { error = exception.Message };
+        var json = JsonSerializer.Serialize(errorResponse);
 
-        context.Response.StatusCode = statusCode;
-        return context.Response.WriteAsync(JsonSerializer.Serialize(response));
+        await response.WriteAsync(json);
     }
 }

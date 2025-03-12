@@ -1,11 +1,20 @@
 ﻿using AdvertisingPlatforms.API.Utils;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
+using Moq;
 
 namespace AdvertisingPlatforms.Tests;
 
 public class FileHelperTests
 {
-    private readonly FileHelper _fileHelper = new();
+    private readonly FileHelper _fileHelper;
+    private readonly Mock<ILogger<FileHelper>> _loggerMock;
+
+    public FileHelperTests()
+    {
+        _loggerMock = new Mock<ILogger<FileHelper>>();
+        _fileHelper = new FileHelper(_loggerMock.Object);
+    }
 
     [Fact]
     public async Task ReadLinesAsync_ValidFile_ReturnsLines()

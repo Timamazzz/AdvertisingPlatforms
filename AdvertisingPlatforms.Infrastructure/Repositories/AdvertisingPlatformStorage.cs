@@ -1,4 +1,5 @@
 ﻿using AdvertisingPlatforms.Domain.Interfaces;
+using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 
 namespace AdvertisingPlatforms.Infrastructure.Repositories;
@@ -6,7 +7,8 @@ namespace AdvertisingPlatforms.Infrastructure.Repositories;
 /// <summary>
 /// Реализация репозитория для хранения рекламных площадок в оперативной памяти.
 /// </summary>
-public class AdvertisingPlatformStorage : IAdvertisingPlatformRepository
+/// <param name="logger">Логгер.</param>
+public class AdvertisingPlatformStorage(ILogger<AdvertisingPlatformStorage> logger) : IAdvertisingPlatformRepository
 {
     /// <summary>
     /// Потокобезопасное хранилище рекламных площадок, где ключ — локация, а значение — набор площадок.
@@ -16,9 +18,10 @@ public class AdvertisingPlatformStorage : IAdvertisingPlatformRepository
     /// <summary>
     /// Сохраняет переданные данные в память, заменяя предыдущие записи.
     /// </summary>
-    /// <param name="data">Словарь, где ключ — регион, значение — набор рекламных площадок.</param>
     public Task SaveDataAsync(Dictionary<string, HashSet<string>> data)
     {
+        logger.LogInformation("Начато сохранение данных о рекламных площадках. Локаций: {Count}", data.Count);
+
         _locationToPlatforms.Clear();
 
         foreach (var entry in data)
@@ -26,32 +29,46 @@ public class AdvertisingPlatformStorage : IAdvertisingPlatformRepository
             _locationToPlatforms[entry.Key] = entry.Value;
         }
 
+        logger.LogInformation("Сохранение данных завершено. Доступно {LocationCount} локаций.",
+            _locationToPlatforms.Count);
         return Task.CompletedTask;
     }
 
     /// <summary>
     /// Возвращает список рекламных площадок для указанной локации.
     /// </summary>
-    /// <param name="location">Локация в формате "/ru".</param>
-    /// <returns>Список рекламных площадок или пустой список, если данных нет.</returns>
     public Task<List<string>> GetPlatformsForLocationAsync(string location)
     {
-        var result = _locationToPlatforms.TryGetValue(location, out var platforms)
-            ? platforms.ToList()
-            : new List<string>();
+        if (_locationToPlatforms.TryGetValue(location, out var platforms))
+        {
+            logger.LogInformation("Запрос рекламных площадок для локации {Location}: найдено {Count} площадок.",
+                location, platforms.Count);
+            return Task.FromResult(platforms.ToList());
+        }
 
-        return Task.FromResult(result);
+        logger.LogWarning("Запрос рекламных площадок для локации {Location}: данных нет.", location);
+        return Task.FromResult(new List<string>());
     }
 
     /// <summary>
     /// Проверяет, загружены ли данные о рекламных площадках.
     /// </summary>
-    public bool HasData() => !_locationToPlatforms.IsEmpty;
+    public bool HasData()
+    {
+        bool hasData = !_locationToPlatforms.IsEmpty;
+        logger.LogInformation("Проверка наличия данных о рекламных площадках: {Result}",
+            hasData ? "данные загружены" : "данные отсутствуют");
+        return hasData;
+    }
 
     /// <summary>
     /// Проверяет, существует ли указанная локация в системе.
     /// </summary>
-    /// <param name="location">Локация в формате "/ru".</param>
-    /// <returns>True, если локация существует, иначе false.</returns>
-    public bool LocationExists(string location) => _locationToPlatforms.ContainsKey(location);
+    public bool LocationExists(string location)
+    {
+        bool exists = _locationToPlatforms.ContainsKey(location);
+        logger.LogInformation("Проверка существования локации {Location}: {Result}", location,
+            exists ? "найдена" : "не найдена");
+        return exists;
+    }
 }
